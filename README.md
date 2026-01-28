@@ -6,10 +6,10 @@
 
 Система реализует смешанный метод исследования (Mixed-Methods), объединяя:
 
-- **Module A (The Eye)**: Визуальный инспектор на основе Google Gemini (мультимодальный анализ)
+- **Module A (The Eye)**: Визуальный инспектор на основе GPT-5-mini Vision
 - **Module B (The Hand)**: Поведенческий агент-симулятор с ReAct паттерном
-- **Module C (The Structure)**: Аудитор кода и доступности (axe-core)
-- **Module D (The Heart)**: Анализ эмоций и точек фрустрации
+- **Module C (The Structure)**: Аудитор доступности (axe-core + WCAG)
+- **Module D (The Heart)**: Анализ эмоций и точек фрустрации (DeepSeek)
 - **Module E (The Brain)**: Синтезатор итоговых отчетов
 
 ### Целевой контекст
@@ -21,7 +21,7 @@
 ## Требования
 
 - Python 3.10+
-- **Google Gemini API ключ** (обязательно) - [получить здесь](https://makersuite.google.com/app/apikey)
+- **OpenAI API ключ** (обязательно) - [получить здесь](https://platform.openai.com/api-keys)
 - **DeepSeek API ключ** (опционально) - [получить здесь](https://platform.deepseek.com/api_keys)
 - Windows/Linux/MacOS
 
@@ -31,20 +31,17 @@
 
 | Модель | Роль | Задачи |
 |--------|------|--------|
-| **Gemini 1.5 Pro** | Основная | Мультимодальный анализ скриншотов, визуальные эвристики, симуляция поведения, генерация отчетов |
-| **DeepSeek** | Вспомогательная | Быстрый анализ тональности, парсинг JSON, валидация выводов (в 5-10 раз дешевле) |
-
-**Почему именно эта комбинация?**
-- Gemini - лучшая мультимодальная модель для анализа UI
-- DeepSeek - быстрая и дешевая для массовых текстовых операций
-- Отказ от OpenAI/Anthropic → экономия ~70% стоимости API вызовов
-- Отказ от локальных BERT моделей → экономия ~3GB места
+| **GPT-5-mini** | Основная | Мультимодальный анализ скриншотов, визуальные эвристики, симуляция поведения |
+| **DeepSeek** | Вспомогательная | Быстрый анализ тональности, парсинг JSON, валидация выводов |
 
 ## Установка
 
 ### Шаг 1: Клонирование и создание виртуального окружения
 
 ```bash
+git clone https://github.com/1-Mak/UX_AI_analyzer.git
+cd UX_AI_analyzer
+
 # Создайте виртуальное окружение
 python -m venv venv
 
@@ -80,29 +77,15 @@ cp .env.example .env     # Linux/Mac
 ```env
 # ===== LLM API Configuration =====
 
-# Google Gemini (Обязательно)
-GEMINI_API_KEY=your-google-api-key-here
-GEMINI_MODEL=gemini-1.5-pro
+# OpenAI (Обязательно)
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_MODEL=gpt-5-mini
 
-# DeepSeek (Опционально, но рекомендуется)
+# DeepSeek (Опционально, для Module D)
 DEEPSEEK_API_KEY=your-deepseek-api-key-here
 DEEPSEEK_MODEL=deepseek-chat
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 ```
-
-**Как получить API ключи:**
-
-1. **Gemini** (обязательно):
-   - Перейдите на [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Войдите с Google аккаунтом
-   - Нажмите "Get API Key" → "Create API key"
-   - Скопируйте ключ в `.env`
-
-2. **DeepSeek** (опционально):
-   - Перейдите на [DeepSeek Platform](https://platform.deepseek.com/api_keys)
-   - Зарегистрируйтесь / войдите
-   - Создайте API ключ
-   - Скопируйте в `.env`
 
 ### Шаг 4: Проверка установки
 
@@ -112,9 +95,6 @@ python src/config.py
 
 # Запустите демо Playwright
 python src/utils/playwright_helper.py
-
-# Запустите демо обработки изображений
-python src/utils/image_processor.py
 ```
 
 ## Использование
@@ -124,8 +104,6 @@ python src/utils/image_processor.py
 ```bash
 python main.py
 ```
-
-По умолчанию система проанализирует `https://example.com`.
 
 ### Настройка задачи через input.json
 
@@ -143,178 +121,119 @@ python main.py
 
 - **`student`** - Студент (20 лет, высокий tech level)
   - Цели: быстро найти расписание, скачать материалы, сдать работу онлайн
-  - Устройства: mobile, tablet, desktop
   - Особенности: многозадачность, ограниченное время между парами
 
 - **`applicant`** - Абитуриент (17 лет, средний tech level)
   - Цели: узнать проходные баллы, найти информацию о поступлении
-  - Устройства: mobile, desktop
-  - Особенности: первый раз на сайте, стресс от выбора, часто с родителями
+  - Особенности: первый раз на сайте, стресс от выбора
 
 - **`teacher`** - Преподаватель (45 лет, средний tech level)
-  - Цели: загрузить оценки, опубликовать материалы, забронировать аудиторию
-  - Устройства: desktop, tablet
+  - Цели: загрузить оценки, опубликовать материалы
   - Особенности: много административной работы, ценит эффективность
 
 ## Структура проекта
 
 ```
 UX_AI_Audit/
-├── main.py                 # Точка входа
+├── main.py                 # Точка входа и оркестратор
 ├── requirements.txt        # Зависимости
 ├── .env.example           # Шаблон конфигурации
 ├── input.json             # Входные данные для аудита
-├── README.md              # Документация
 │
 ├── src/
 │   ├── config.py          # Централизованная конфигурация
+│   ├── models.py          # Pydantic модели (персоны, шаги)
 │   │
 │   ├── modules/           # AI модули
-│   │   ├── module_a/      # Visual Inspector
-│   │   ├── module_b/      # Behavioral Agent
-│   │   ├── module_c/      # Code Auditor
-│   │   ├── module_d/      # Sentiment Analyzer
-│   │   └── module_e/      # Synthesizer
+│   │   ├── module_a/      # Visual Inspector (GPT-5-mini Vision)
+│   │   ├── module_b/      # Behavioral Agent (ReAct loop)
+│   │   ├── module_c/      # Accessibility Auditor (axe-core)
+│   │   ├── module_d/      # Sentiment Analyzer (DeepSeek)
+│   │   └── module_e/      # Report Synthesizer
 │   │
 │   └── utils/             # Утилиты
 │       ├── playwright_helper.py    # Браузерная автоматизация
-│       └── image_processor.py      # Обработка скриншотов
+│       ├── image_processor.py      # Обработка скриншотов
+│       ├── openai_helper.py        # OpenAI API интеграция
+│       └── deepseek_helper.py      # DeepSeek API интеграция
 │
 ├── data/
 │   ├── screenshots/       # Скриншоты сессий
 │   └── reports/          # Итоговые отчеты
 │
-├── logs/                  # Логи системы
 └── tests/                # Тесты
 ```
 
 ## Текущий статус
 
-### ✅ Реализовано (Этап 1)
+### Реализовано
+
+**Module A - Visual Inspector:**
+- Анализ скриншотов с GPT-5-mini Vision
+- Оценка по 10 эвристикам Нильсена
+- Определение критичности проблем (Critical/High/Medium/Low)
+- Координатная сетка для точной локализации
+
+**Module B - Behavioral Agent:**
+- ReAct-based симуляция поведения пользователя
+- Поддержка персон (student, applicant, teacher)
+- Действия: click, type, scroll, wait, go_back, go_to
+- Отслеживание эмоционального состояния
+- Лог поведения в JSON формате
+
+**Module C - Accessibility Auditor:**
+- Интеграция с axe-core через axe-playwright-python
+- Поддержка уровней WCAG (A, AA, AAA)
+- Мульти-страничное сканирование по логу Module B
+- Группировка проблем по impact (critical, serious, moderate, minor)
 
 **Инфраструктура:**
-- Структура проекта с модульной архитектурой
-- Конфигурация через `.env` и Pydantic модели
-- Playwright helper (навигация, скриншоты, DOM extraction)
-- Image processor (координатная сетка, аннотации)
-- Базовый оркестратор (main.py)
+- Модульная архитектура с Pydantic моделями
+- Playwright helper для браузерной автоматизации
+- Image processor с координатной сеткой
+- Централизованная конфигурация через .env
 
-**LLM интеграция:**
-- ✅ Gemini helper (мультимодальный анализ)
-- ✅ DeepSeek helper (быстрые текстовые задачи)
-- ✅ Образовательные персоны (студент, абитуриент, преподаватель)
-- ✅ Pydantic модели для валидации данных
+### В разработке
 
-### 🚧 В разработке (Этап 2-4)
-
-- **Module A**: Визуальный анализ по эвристикам Нильсена (Gemini Vision)
-- **Module B**: ReAct агент для симуляции поведения (Gemini + LangChain)
-- **Module C**: Аудит доступности (axe-core + Gemini для семантического анализа)
-- **Module D**: Анализ тональности и точек фрустрации (DeepSeek)
+- **Module D**: Анализ тональности через DeepSeek API (план готов)
 - **Module E**: Генерация PDF отчетов (Jinja2 + WeasyPrint)
 
-## Примеры использования
+## Примеры вывода
 
-### Демо 1: Playwright Helper
+### Module A - Visual Analysis
+```
+  ────────────────────────────────────
+  MODULE A: VISUAL ANALYSIS SUMMARY
+  ────────────────────────────────────
+    Total Issues: 8
+    Critical: 2 | High: 3 | Medium: 2 | Low: 1
 
-```bash
-python src/utils/playwright_helper.py
+    Overall Assessment:
+    The interface has significant navigation and
+    visibility issues that impact user experience...
 ```
 
-Запустит браузер, откроет example.com и создаст:
-- Скриншот страницы
-- DOM снапшот
-- Accessibility tree
-- Упрощенное DOM дерево с интерактивными элементами
-
-### Демо 2: Image Processor
-
-```bash
-# Сначала создайте скриншот через Playwright demo
-python src/utils/playwright_helper.py
-
-# Затем добавьте координатную сетку
-python src/utils/image_processor.py
+### Module B - Behavioral Simulation
+```
+  ────────────────────────────────────
+  MODULE B: BEHAVIORAL LOG SUMMARY
+  ────────────────────────────────────
+    Total Steps: 7
+    Task Status: completed
+    Emotional Trend: declining
 ```
 
-Результат: скриншот с полупрозрачной координатной сеткой (A1, B2, C3...).
-
-### Демо 3: Gemini Helper (требует API ключ)
-
-```bash
-python src/utils/gemini_helper.py
+### Module C - Accessibility Audit
 ```
+  ────────────────────────────────────
+  MODULE C: ACCESSIBILITY SUMMARY
+  ────────────────────────────────────
+    WCAG Level: AA
+    Total Issues: 4 (67 affected nodes)
 
-Демонстрирует:
-- Визуальный анализ скриншота по эвристикам Нильсена
-- Анализ тональности текста
-- Мультимодальный анализ (текст + изображение)
-
-### Демо 4: Pydantic модели персон
-
-```bash
-python src/models.py
+    By Impact:
+      critical: 0
+      serious: 2 (63 nodes)
+      moderate: 1 (3 nodes)
+      minor: 1 (1 node)
 ```
-
-Валидирует и выводит детальную информацию о всех трех персонах.
-
-### Демо 5: DeepSeek Helper (если есть API ключ)
-
-```bash
-python src/utils/deepseek_helper.py
-```
-
-Демонстрирует:
-- Быстрый анализ тональности
-- Пакетную обработку текстов
-- Извлечение JSON из текста
-
-## Разработка
-
-### Следующие шаги (Этап 2)
-
-Для реализации Module B (Behavioral Agent):
-
-1. Изучите `src/modules/module_b/` структуру
-2. Настройте LangChain с OpenAI
-3. Реализуйте ReAct цикл:
-   - Observe (извлечение accessibility tree)
-   - Simplify (очистка HTML)
-   - Reason (LLM анализ)
-   - Decide (выбор действия)
-   - Act (выполнение через Playwright)
-
-### Архитектура модулей
-
-Каждый модуль должен иметь:
-- `agent.py` - основная логика
-- `prompts.py` - системные промпты для LLM
-- `models.py` - Pydantic модели для валидации JSON
-- `__init__.py` - экспорт публичного API
-
-## Известные ограничения
-
-- Требуется стабильное интернет-соединение для API вызовов
-- Gemini имеет лимиты на размер изображений (макс. 20MB) и контекста (1M tokens)
-- Playwright может не поддерживать некоторые Shadow DOM элементы
-- axe-core не ловит 100% проблем доступности (требует ручной проверки)
-- DeepSeek API может иметь географические ограничения (работает не во всех регионах)
-
-## Стоимость использования
-
-Примерная стоимость одного полного аудита:
-
-| Задача | Модель | Токены | Стоимость |
-|--------|--------|--------|-----------|
-| Визуальный анализ (3 скриншота) | Gemini | ~50k | $0.10 |
-| Симуляция поведения (15 шагов) | Gemini | ~100k | $0.20 |
-| Анализ тональности (50 текстов) | DeepSeek | ~20k | $0.003 |
-| Генерация отчета | Gemini | ~30k | $0.06 |
-| **ИТОГО** | | | **~$0.36** |
-
-
-
-
-## Контакты
-
-Для вопросов и предложений создайте Issue в репозитории проекта.
