@@ -24,6 +24,8 @@ from src.utils.image_processor import ImageProcessor
 from src.modules.module_a import ModuleA
 from src.modules.module_b import ModuleB
 from src.modules.module_c import ModuleC
+from src.modules.module_d import ModuleD
+from src.utils.deepseek_helper import is_deepseek_available
 
 
 class UXAuditOrchestrator:
@@ -81,9 +83,7 @@ class UXAuditOrchestrator:
             await self._run_module_c()
 
             # Stage 5: Module D - Sentiment Analysis
-            print("\n[STAGE 5] Module D: Sentiment Analyzer")
-            print("(Not implemented - Requires transformers/BERT)")
-            # await self._run_module_d()
+            await self._run_module_d()
 
             # Stage 6: Module E - Synthesis
             print("\n[STAGE 6] Module E: Report Synthesizer")
@@ -284,6 +284,57 @@ class UXAuditOrchestrator:
             import traceback
             traceback.print_exc()
             self.results["module_c_results"] = {"error": str(e)}
+
+    async def _run_module_d(self):
+        """Run Module D - Sentiment Analyzer"""
+        try:
+            print("\n[STAGE 5] Module D: Sentiment Analyzer")
+
+            # Check if DeepSeek is configured
+            if not is_deepseek_available():
+                print("  ⚠ DeepSeek API не настроен, пропуск Module D")
+                print("     Добавьте DEEPSEEK_API_KEY в .env для анализа настроений")
+                self.results["module_d_results"] = {"skipped": "deepseek_not_configured"}
+                return
+
+            # Check if behavioral log exists
+            behavioral_log = self.session_dir / "module_b_behavioral_log.json"
+
+            if not behavioral_log.exists():
+                print("  ⚠ Поведенческий лог не найден, пропуск Module D")
+                self.results["module_d_results"] = {"skipped": "no_behavioral_log"}
+                return
+
+            print(f"  → Инициализация анализатора настроений...")
+
+            module_d = ModuleD(
+                session_dir=self.session_dir,
+                persona_key=self.persona
+            )
+
+            print(f"  → Анализ {behavioral_log.name}...")
+            result = await module_d.analyze_behavioral_log(behavioral_log)
+
+            # Store results
+            self.results["module_d_results"] = {
+                "session_score": result["summary"]["session_score"],
+                "trend": result["summary"]["trend"],
+                "distribution": result["summary"]["distribution"],
+                "pain_points_count": len(result["pain_points"]),
+                "insights": result["insights"],
+                "analysis_file": str(self.session_dir / "module_d_sentiment_analysis.json")
+            }
+
+            # Print summary
+            module_d.print_summary(result)
+
+            print(f"  ✓ Module D завершён")
+
+        except Exception as e:
+            print(f"  ✗ Module D завершился с ошибкой: {e}")
+            import traceback
+            traceback.print_exc()
+            self.results["module_d_results"] = {"error": str(e)}
 
     def _save_results(self):
         """Save audit results to JSON"""
