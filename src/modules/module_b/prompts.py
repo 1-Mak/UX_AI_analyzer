@@ -13,7 +13,7 @@ BEHAVIORAL_AGENT_SYSTEM = """Ты {persona_name}, {persona_age} лет.
 
 {persona_system_prompt}
 
-КОНТЕКСТ ПРОЕКТА: Ты используешь образовательный сайт (университет ВШЭ).
+КОНТЕКСТ ПРОЕКТА: Ты используешь веб-сайт.
 
 ТВОЯ ТЕКУЩАЯ ЗАДАЧА: {task}
 
@@ -37,12 +37,12 @@ ACTION_SPACE_DESCRIPTION = """
 
 1. **click** - Кликнуть на элемент
    - target: ID элемента из DOM (число или строка)
-   - Пример: {"action_type": "click", "target": "5", "reasoning": "Клик на ссылку 'Расписание'"}
+   - Пример: {"action_type": "click", "target": "5", "reasoning": "Клик на нужную ссылку"}
 
 2. **type** - Ввести текст в поле ввода
    - target: ID поля ввода
    - value: текст для ввода
-   - Пример: {"action_type": "type", "target": "search-input", "value": "расписание", "reasoning": "Ввожу поисковый запрос"}
+   - Пример: {"action_type": "type", "target": "search-input", "value": "поисковый запрос", "reasoning": "Ввожу поисковый запрос"}
 
 3. **scroll_down** - Прокрутить страницу вниз
    - Без параметров
@@ -58,7 +58,7 @@ ACTION_SPACE_DESCRIPTION = """
 
 6. **navigate** - Перейти на конкретный URL
    - value: полный URL
-   - Пример: {"action_type": "navigate", "value": "https://www.hse.ru/students/", "reasoning": "Перехожу на страницу студентов"}
+   - Пример: {"action_type": "navigate", "value": "https://example.com/page/", "reasoning": "Перехожу на нужную страницу"}
 
 7. **back** - Вернуться на предыдущую страницу
    - Без параметров
@@ -66,7 +66,7 @@ ACTION_SPACE_DESCRIPTION = """
 
 8. **task_complete** - Сообщить о завершении задачи
    - Используй когда задача ВЫПОЛНЕНА
-   - Пример: {"action_type": "task_complete", "reasoning": "Нашёл страницу с расписанием занятий"}
+   - Пример: {"action_type": "task_complete", "reasoning": "Нашёл нужную информацию"}
 
 ⚠️ ВАЖНО:
 - Используй ID элементов из DOM (data-audit-id или id)
@@ -287,12 +287,12 @@ if __name__ == "__main__":
 
     test_prompt = get_behavioral_prompt(
         persona_key="student",
-        task="Найти расписание занятий",
+        task="Найти нужную информацию",
         step_history=[
-            {"step_id": 1, "action_taken": "click on 'Студентам'", "status": "success", "url": "https://hse.ru"}
+            {"step_id": 1, "action_taken": "click on 'Меню'", "status": "success", "url": "https://example.com"}
         ],
-        current_dom="<a id=\"1\" text=\"Главная\"/>\n<a id=\"2\" text=\"Расписание\"/>",
-        current_url="https://www.hse.ru/students/"
+        current_dom="<a id=\"1\" text=\"Главная\"/>\n<a id=\"2\" text=\"Каталог\"/>",
+        current_url="https://example.com/page/"
     )
 
     print("Generated prompt (first 2000 chars):")

@@ -247,27 +247,27 @@ def demo_state_tracker():
             agent_thought="Looking at homepage",
             action_taken='{"action_type": "click", "target": "5"}',
             status="success",
-            url="https://hse.ru",
+            url="https://example.com",
             sentiment="NEUTRAL"
         ),
         BehaviorStep(
             step_id=2,
             screenshot="step_02.png",
             dom_snapshot="<html>...</html>",
-            agent_thought="Navigating to students page",
+            agent_thought="Navigating to target page",
             action_taken='{"action_type": "click", "target": "10"}',
             status="success",
-            url="https://hse.ru/students/",
+            url="https://example.com/page/",
             sentiment="POSITIVE"
         ),
         BehaviorStep(
             step_id=3,
             screenshot="step_03.png",
             dom_snapshot="<html>...</html>",
-            agent_thought="Looking for schedule",
+            agent_thought="Looking for information",
             action_taken='{"action_type": "scroll_down"}',
             status="success",
-            url="https://hse.ru/students/",
+            url="https://example.com/page/",
             sentiment="NEUTRAL"
         ),
     ]

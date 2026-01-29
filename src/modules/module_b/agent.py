@@ -438,13 +438,13 @@ async def demo_module_b():
     module_b = ModuleB(
         session_dir=session_dir,
         persona_key="student",
-        task="Найти информацию о поступлении в магистратуру",
+        task="Найти нужную информацию на сайте",
         max_steps=10
     )
 
     # Run simulation
     result = await module_b.simulate_behavior(
-        starting_url="https://www.hse.ru"
+        starting_url="https://example.com"
     )
 
     # Print summary
