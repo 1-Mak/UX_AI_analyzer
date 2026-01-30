@@ -307,13 +307,19 @@ class ReportGenerator:
                 with open(module_a_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     for issue in data.get("issues", []):
+                        # Build full description from title + description
+                        title = issue.get("title", "")
+                        desc = issue.get("description", "")
+                        full_desc = f"{title}: {desc}" if title and desc else title or desc
+
                         all_issues.append({
                             "source": "Module A",
                             "type": "visual",
                             "severity": issue.get("severity", "medium").lower(),
-                            "description": issue.get("issue", ""),
+                            "description": full_desc,
                             "location": issue.get("location", ""),
-                            "heuristic": issue.get("heuristic", "")
+                            "heuristic": issue.get("heuristic", ""),
+                            "recommendation": issue.get("recommendation", "")
                         })
             except Exception:
                 pass

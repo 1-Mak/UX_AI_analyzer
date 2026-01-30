@@ -766,14 +766,25 @@ class HTMLReportGenerator:
 
                 meta_html = "".join(f"<span>{m}</span>" for m in meta_items)
 
+                # Recommendation block if exists
+                rec = issue.get("recommendation", "")
+                rec_html = ""
+                if rec:
+                    rec_html = f'''
+                    <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #22c55e;">
+                        <strong style="color: #166534;">Рекомендация:</strong> {rec}
+                    </div>
+                    '''
+
                 issues_html += f"""
                 <div class="issue-item {sev}">
                     <div class="issue-header">
-                        <div class="issue-title">{desc[:100]}{'...' if len(desc) > 100 else ''}</div>
+                        <div class="issue-title">{desc[:150]}{'...' if len(desc) > 150 else ''}</div>
                         <span class="issue-source">{source}</span>
                     </div>
                     <div class="issue-description">{desc}</div>
                     {f'<div class="issue-meta">{meta_html}</div>' if meta_items else ''}
+                    {rec_html}
                 </div>
                 """
 
