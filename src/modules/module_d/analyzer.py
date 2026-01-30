@@ -14,14 +14,19 @@ from .sentiment_config import EMOTION_CATEGORIES
 class SentimentAnalyzer:
     """
     Analyzes sentiment of behavioral step texts using DeepSeek API
+
+    Supports two modes:
+    - Fast mode (deepseek-chat): Quick sentiment classification
+    - Deep mode (deepseek-reasoner): Chain-of-thought analysis with reasoning
     """
 
-    def __init__(self, use_batch: bool = True):
+    def __init__(self, use_batch: bool = True, use_reasoner: bool = False):
         """
         Initialize sentiment analyzer
 
         Args:
             use_batch: Use batch API for efficiency (recommended)
+            use_reasoner: Use deepseek-reasoner for deeper analysis (slower but more accurate)
         """
         if not is_deepseek_available():
             raise ValueError(
@@ -31,6 +36,7 @@ class SentimentAnalyzer:
 
         self.deepseek = DeepSeekHelper()
         self.use_batch = use_batch
+        self.use_reasoner = use_reasoner
 
     def extract_analysis_text(self, step: Dict[str, Any]) -> str:
         """
@@ -105,13 +111,23 @@ class SentimentAnalyzer:
                 "status": step.get("status", "unknown")
             }
 
-        # Get sentiment from DeepSeek
-        sentiment = self.deepseek.analyze_sentiment_fast(text)
+        # Get sentiment - use reasoner if enabled for deeper analysis
+        if self.use_reasoner:
+            result = self.deepseek.analyze_sentiment_with_reasoning(text)
+            sentiment = result.get("sentiment", "NEUTRAL")
+            extra_data = {
+                "confidence": result.get("confidence"),
+                "emotion_type": result.get("emotion_type"),
+                "reasoning": result.get("reasoning", "")[:500]  # Truncate reasoning
+            }
+        else:
+            sentiment = self.deepseek.analyze_sentiment_fast(text)
+            extra_data = {}
 
         # Detect emotion keywords
         keywords = self.detect_emotion_keywords(text)
 
-        return {
+        result = {
             "step_id": step.get("step_id"),
             "text_analyzed": text[:200] + "..." if len(text) > 200 else text,
             "original_sentiment": step.get("sentiment"),
@@ -119,6 +135,12 @@ class SentimentAnalyzer:
             "keywords": keywords,
             "status": step.get("status", "unknown")
         }
+
+        # Add extra data from reasoner if available
+        if extra_data:
+            result.update(extra_data)
+
+        return result
 
     def analyze_steps_batch(self, steps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -130,6 +152,11 @@ class SentimentAnalyzer:
         Returns:
             List of analysis results
         """
+        # If using reasoner, analyze one by one (reasoner doesn't support batch)
+        if self.use_reasoner:
+            print("    (Using DeepSeek Reasoner - analyzing with chain-of-thought...)")
+            return [self.analyze_step(step) for step in steps]
+
         # Extract texts for analysis
         texts_to_analyze = []
         step_mapping = []  # Track which step each text belongs to

@@ -26,7 +26,8 @@ class ModuleD:
     def __init__(
         self,
         session_dir: Path,
-        persona_key: Optional[str] = None
+        persona_key: Optional[str] = None,
+        use_reasoner: bool = False
     ):
         """
         Initialize Module D
@@ -34,9 +35,11 @@ class ModuleD:
         Args:
             session_dir: Directory for saving results
             persona_key: Persona context (student, applicant, teacher)
+            use_reasoner: Use DeepSeek Reasoner for deeper analysis (slower but more accurate)
         """
         self.session_dir = Path(session_dir)
         self.persona_key = persona_key
+        self.use_reasoner = use_reasoner
 
         # Check DeepSeek availability
         if not is_deepseek_available():
@@ -45,7 +48,7 @@ class ModuleD:
                 "Set DEEPSEEK_API_KEY in .env file."
             )
 
-        self.analyzer = SentimentAnalyzer(use_batch=True)
+        self.analyzer = SentimentAnalyzer(use_batch=True, use_reasoner=use_reasoner)
         self.aggregator = SentimentAggregator(persona_key=persona_key)
 
     def _load_behavioral_log(self, log_path: Path) -> Dict[str, Any]:
@@ -292,8 +295,12 @@ class ModuleD:
         print()
 
 
-async def demo_module_d():
-    """Demo function to test Module D"""
+async def demo_module_d(use_reasoner: bool = False):
+    """Demo function to test Module D
+
+    Args:
+        use_reasoner: Use DeepSeek Reasoner for deeper analysis
+    """
     from pathlib import Path
 
     # Find a behavioral log to analyze
@@ -313,12 +320,15 @@ async def demo_module_d():
     latest_log = max(behavioral_logs, key=lambda p: p.stat().st_mtime)
     session_dir = latest_log.parent
 
+    mode = "DeepSeek Reasoner (deep)" if use_reasoner else "DeepSeek Chat (fast)"
     print(f"Testing Module D with: {latest_log}")
+    print(f"Analysis mode: {mode}")
 
     # Run analysis
     module_d = ModuleD(
         session_dir=session_dir,
-        persona_key="student"
+        persona_key="student",
+        use_reasoner=use_reasoner
     )
 
     result = await module_d.analyze_behavioral_log(latest_log)

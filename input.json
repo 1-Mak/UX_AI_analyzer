@@ -1,5 +1,7 @@
 {
   "url": "https://example.com",
   "task": "Найти нужную информацию на сайте",
-  "persona": "student"
+  "persona": "student",
+  "max_steps": 15,
+  "use_reasoner": false
 }

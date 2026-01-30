@@ -307,9 +307,15 @@ class UXAuditOrchestrator:
 
             print(f"  → Инициализация анализатора настроений...")
 
+            # Check if deep analysis with reasoner is requested
+            use_reasoner = self.config.get("use_reasoner", False)
+            if use_reasoner:
+                print(f"  -> Deep analysis mode (DeepSeek Reasoner)")
+
             module_d = ModuleD(
                 session_dir=self.session_dir,
-                persona_key=self.persona
+                persona_key=self.persona,
+                use_reasoner=use_reasoner
             )
 
             print(f"  → Анализ {behavioral_log.name}...")
