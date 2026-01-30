@@ -205,17 +205,22 @@ class ModuleC:
         urls = set()
 
         # Check different possible log formats
-        steps = behavioral_log.get("steps", behavioral_log.get("behavioral_log", []))
+        # Module B saves as plain list, but could also be dict with "steps" key
+        if isinstance(behavioral_log, list):
+            steps = behavioral_log
+        else:
+            steps = behavioral_log.get("steps", behavioral_log.get("behavioral_log", []))
 
         for step in steps:
             url = step.get("url")
             if url:
                 urls.add(url)
 
-        # Also check for starting_url
-        starting_url = behavioral_log.get("starting_url")
-        if starting_url:
-            urls.add(starting_url)
+        # Also check for starting_url (only if dict format)
+        if isinstance(behavioral_log, dict):
+            starting_url = behavioral_log.get("starting_url")
+            if starting_url:
+                urls.add(starting_url)
 
         if not urls:
             raise ValueError("No URLs found in behavioral log")
