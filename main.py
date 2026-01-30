@@ -25,6 +25,7 @@ from src.modules.module_a import ModuleA
 from src.modules.module_b import ModuleB
 from src.modules.module_c import ModuleC
 from src.modules.module_d import ModuleD
+from src.modules.module_e import ModuleE
 from src.utils.deepseek_helper import is_deepseek_available
 
 
@@ -86,9 +87,7 @@ class UXAuditOrchestrator:
             await self._run_module_d()
 
             # Stage 6: Module E - Synthesis
-            print("\n[STAGE 6] Module E: Report Synthesizer")
-            print("(Not implemented - Requires GPT-4o + Jinja2)")
-            # await self._run_module_e()
+            await self._run_module_e()
 
             # Save results
             self._save_results()
@@ -341,6 +340,45 @@ class UXAuditOrchestrator:
             import traceback
             traceback.print_exc()
             self.results["module_d_results"] = {"error": str(e)}
+
+    async def _run_module_e(self):
+        """Run Module E - Report Synthesizer"""
+        try:
+            print("\n[STAGE 6] Module E: Report Synthesizer")
+            print(f"  -> Инициализация генератора отчетов...")
+
+            # First save results so Module E can read them
+            self._save_results()
+
+            module_e = ModuleE(session_dir=self.session_dir)
+
+            print(f"  -> Генерация отчета...")
+            report = module_e.generate_report(audit_results=self.results)
+
+            print(f"  -> Создание HTML отчета...")
+            html_path = module_e.generate_html_report()
+
+            # Store results
+            self.results["module_e_results"] = {
+                "overall_score": report["overall_score"]["overall"],
+                "rating": report["overall_score"]["rating_label"],
+                "issues_count": len(report.get("all_issues", [])),
+                "recommendations_count": len(report.get("recommendations", [])),
+                "json_report": str(self.session_dir / "module_e_final_report.json"),
+                "html_report": str(html_path)
+            }
+
+            # Print summary
+            module_e.print_summary(report)
+
+            print(f"  [OK] Module E завершен")
+            print(f"      HTML отчет: {html_path}")
+
+        except Exception as e:
+            print(f"  [X] Module E завершился с ошибкой: {e}")
+            import traceback
+            traceback.print_exc()
+            self.results["module_e_results"] = {"error": str(e)}
 
     def _save_results(self):
         """Save audit results to JSON"""
