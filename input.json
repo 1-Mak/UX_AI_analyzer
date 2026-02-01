@@ -1,6 +1,6 @@
 {
-  "url": "https://example.com",
-  "task": "Найти нужную информацию на сайте",
+  "url": "https://www.hse.ru",
+  "task": "Найти раздел расписание студентов",
   "persona": "student",
   "max_steps": 15,
   "use_reasoner": false

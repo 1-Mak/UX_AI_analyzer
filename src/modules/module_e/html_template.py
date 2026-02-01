@@ -483,10 +483,21 @@ class HTMLReportGenerator:
         if critical:
             critical_items = ""
             for c in critical:
+                # Support both old string format and new dict format
+                if isinstance(c, dict):
+                    title = c.get("title", "Критическая проблема")
+                    detail = c.get("detail", "Требует немедленного внимания")
+                    source = c.get("source", "")
+                    source_badge = f'<span style="font-size: 0.8em; color: #6b7280; margin-left: 8px;">({source})</span>' if source else ""
+                else:
+                    title = c
+                    detail = "Требует немедленного внимания для обеспечения качественного пользовательского опыта."
+                    source_badge = ""
+
                 critical_items += f"""
                 <div class="critical-item">
-                    <div class="title">{c}</div>
-                    <div class="detail">Требует немедленного внимания для обеспечения качественного пользовательского опыта.</div>
+                    <div class="title">{title}{source_badge}</div>
+                    <div class="detail">{detail}</div>
                 </div>
                 """
             critical_html = f"""
