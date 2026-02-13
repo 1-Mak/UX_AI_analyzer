@@ -2,6 +2,7 @@
 Centralized configuration for UX AI Audit System
 """
 import os
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -50,9 +51,23 @@ DEFAULT_VIEWPORT_HEIGHT = int(os.getenv("DEFAULT_VIEWPORT_HEIGHT", "1080"))
 GRID_SIZE = int(os.getenv("GRID_SIZE", "100"))
 GRID_COLOR = os.getenv("GRID_COLOR", "rgba(255,0,0,0.3)")
 
+# Navigation Settings
+NAVIGATION_TIMEOUT = int(os.getenv("NAVIGATION_TIMEOUT", "30000"))
+PAGE_LOAD_WAIT = int(os.getenv("PAGE_LOAD_WAIT", "2000"))
+
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FILE = LOGS_DIR / "audit.log"
+
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("ux_audit")
 
 # Nielsen's 10 Heuristics (Module A)
 NIELSEN_HEURISTICS = [
