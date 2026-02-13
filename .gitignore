@@ -78,3 +78,10 @@ tmp/
 debug_axe.py
 test_module_c.py
 nul
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Jupyter
+.ipynb_checkpoints/
